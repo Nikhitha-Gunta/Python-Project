@@ -13,29 +13,28 @@ class PetCareApp:
         self.setup_ui()
 
     def setup_ui(self):
-        self.home_frame = tk.Frame(self.root)
+        self.root.configure(bg="#728780")        #Adding background color of the root window. used Hex code
+        self.home_frame = tk.Frame(self.root, bg="#728780")           #Adding a background color of the frame
         self.home_frame.place(relx=0.5, rely=0.25, anchor=tk.CENTER)
 
-        tk.Label(self.home_frame, text="Username:").grid(row=0, column=0, sticky=tk.W, pady=2)
+        tk.Label(self.home_frame, text="Username:", bg="#728780", fg="#FFFFFF").grid(row=0, column=0, sticky=tk.W, pady=2)
         self.home_username_entry = tk.Entry(self.home_frame)
         self.home_username_entry.grid(row=0, column=1, pady=2, padx=5)
 
-        tk.Label(self.home_frame, text="Password:").grid(row=1, column=0, sticky=tk.W, pady=2)
+        tk.Label(self.home_frame, text="Password:", bg="#728780", fg="#FFFFFF").grid(row=1, column=0, sticky=tk.W, pady=2)
         self.home_password_entry = tk.Entry(self.home_frame, show="*")
         self.home_password_entry.grid(row=1, column=1, pady=2, padx=5)
 
         self.login_role_var = tk.StringVar(value="user")
-        self.login_role_frame = tk.Frame(self.home_frame)
+        self.login_role_frame = tk.Frame(self.home_frame, bg="white")
         self.login_role_frame.grid(row=2, column=1, sticky=tk.W, pady=2)
-        tk.Radiobutton(self.login_role_frame, text="User", variable=self.login_role_var, value="user").pack(
-            side=tk.LEFT)
-        tk.Radiobutton(self.login_role_frame, text="Admin", variable=self.login_role_var, value="admin").pack(
-            side=tk.LEFT)
+        tk.Radiobutton(self.login_role_frame, text="User", variable=self.login_role_var, value="user", bg="#728780", fg="#FFFFFF").pack(side=tk.LEFT)          #Adding a background color of the user radio button
+        tk.Radiobutton(self.login_role_frame, text="Admin", variable=self.login_role_var, value="admin", bg="#728780", fg="#FFFFFF").pack(side=tk.LEFT)        #Adding a background color of the admin radio button
 
-        button_frame = tk.Frame(self.home_frame)
+        button_frame = tk.Frame(self.home_frame, bg="#728780")           #Adding color to the background of the buttons' frame
         button_frame.grid(row=3, column=0, columnspan=2, pady=10)
-        tk.Button(button_frame, text="Register", command=self.show_register_form).pack(side=tk.LEFT, padx=5)
-        tk.Button(button_frame, text="Login", command=self.login_user_from_home).pack(side=tk.LEFT, padx=5)
+        tk.Button(button_frame, text="Register", command=self.show_register_form, bg="#728780", fg="#FFFFFF").pack(side=tk.LEFT, padx=5)     #Adding a background color of the register button
+        tk.Button(button_frame, text="Login", command=self.login_user_from_home, bg="#728780", fg="#FFFFFF").pack(side=tk.LEFT, padx=5)      #Adding a background color of the login button
 
     def connect_db(self):
         try:
@@ -52,40 +51,40 @@ class PetCareApp:
     def show_register_form(self):
         self.clear_ui()
 
-        self.register_frame = tk.Frame(self.root)
+        self.register_frame = tk.Frame(self.root, bg="#728780")
         self.register_frame.pack(fill=tk.BOTH, expand=True)
 
         self.role_var = tk.StringVar(value="user")
-        role_frame = tk.Frame(self.register_frame)
+        role_frame = tk.Frame(self.register_frame, bg="#728780")
         role_frame.pack(pady=5)
-        tk.Radiobutton(role_frame, text="User", variable=self.role_var, value="user").pack(side=tk.LEFT)
-        tk.Radiobutton(role_frame, text="Admin", variable=self.role_var, value="admin").pack(side=tk.LEFT)
+        tk.Radiobutton(role_frame, text="User", bg="#728780", variable=self.role_var, value="user").pack(side=tk.LEFT)        #Adding a background color of the user radio button
+        tk.Radiobutton(role_frame, text="Admin", bg="#728780", variable=self.role_var, value="admin").pack(side=tk.LEFT)      #Adding a background color of the admin radio button
 
-        tk.Label(self.register_frame, text="Username:").pack()
+        tk.Label(self.register_frame, text="Username:", bg="#728780").pack()
         self.reg_username_entry = tk.Entry(self.register_frame)
         self.reg_username_entry.pack()
 
-        tk.Label(self.register_frame, text="Email Address:").pack()
+        tk.Label(self.register_frame, text="Email Address:", bg="#728780").pack()
         self.reg_email_entry = tk.Entry(self.register_frame)
         self.reg_email_entry.pack()
 
-        tk.Label(self.register_frame, text="Password:").pack()
+        tk.Label(self.register_frame, text="Password:", bg="#728780").pack()
         self.reg_password_entry = tk.Entry(self.register_frame, show="*")
         self.reg_password_entry.pack()
 
-        tk.Label(self.register_frame, text="First Name:").pack()
+        tk.Label(self.register_frame, text="First Name:", bg="#728780").pack()
         self.reg_firstname_entry = tk.Entry(self.register_frame)
         self.reg_firstname_entry.pack()
 
-        tk.Label(self.register_frame, text="Last Name:").pack()
+        tk.Label(self.register_frame, text="Last Name:", bg="#728780").pack()
         self.reg_lastname_entry = tk.Entry(self.register_frame)
         self.reg_lastname_entry.pack()
 
         # Frame for action buttons
-        action_frame = tk.Frame(self.register_frame)
+        action_frame = tk.Frame(self.register_frame, bg="#728780")
         action_frame.pack(pady=10)
-        tk.Button(action_frame, text="Register", command=self.register_user).pack(side=tk.LEFT, padx=5)
-        tk.Button(action_frame, text="Back", command=self.back_to_home).pack(side=tk.LEFT, padx=5)
+        tk.Button(action_frame, text="Register", bg="#728780", fg="#FFFFFF", command=self.register_user).pack(side=tk.LEFT, padx=5)
+        tk.Button(action_frame, text="Back", bg="#728780", fg="#FFFFFF", command=self.back_to_home).pack(side=tk.LEFT, padx=5)
 
     def login_user_from_home(self):
         username = self.home_username_entry.get()
