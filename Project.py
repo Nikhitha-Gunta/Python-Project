@@ -13,8 +13,8 @@ class PetCareApp:
         self.setup_ui()
 
     def setup_ui(self):
-        self.root.configure(bg="#728780")        #Adding background color of the root window. used Hex code
-        self.home_frame = tk.Frame(self.root, bg="#728780")           #Adding a background color of the frame
+        self.root.configure(bg="#728780")
+        self.home_frame = tk.Frame(self.root, bg="#728780")
         self.home_frame.place(relx=0.5, rely=0.25, anchor=tk.CENTER)
 
         tk.Label(self.home_frame, text="Username:", bg="#728780", fg="#FFFFFF").grid(row=0, column=0, sticky=tk.W, pady=2)
@@ -39,10 +39,10 @@ class PetCareApp:
     def connect_db(self):
         try:
             return mysql.connector.connect(
-                host='LAPTOP-I8MG72D',
-                user='root',
-                passwd='Fallfall@2022',
-                database='petcare_management_system'
+                host='141.209.241.81',
+                user='grp3w200',
+                passwd='passinit',
+                database='bis698_S24_Grp3_w200'
             )
         except mysql.connector.Error as e:
             messagebox.showerror("Database Connection Error", str(e))
@@ -121,13 +121,13 @@ class PetCareApp:
             cursor = conn.cursor()
             try:
                 # Check if the username already exists
-                cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
+                cursor.execute("SELECT * FROM user_information WHERE username = %s", (username,))
                 if cursor.fetchone():
                     messagebox.showerror("Error", "Username already exists.")
                     return
 
                 # Insert new user into the database
-                insert_query = ("INSERT INTO users (username, email, password, firstname, lastname, role) "
+                insert_query = ("INSERT INTO user_information (username, email, password, firstname, lastname, role) "
                                 "VALUES (%s, %s, %s, %s, %s, %s)")
                 cursor.execute(insert_query, (username, email, password, firstname, lastname, role))
                 conn.commit()
@@ -147,7 +147,7 @@ class PetCareApp:
             cursor = conn.cursor()
             try:
                 # Select user from the database with the provided credentials
-                query = "SELECT * FROM users WHERE username = %s AND password = %s AND role = %s"
+                query = "SELECT * FROM user_information WHERE username = %s AND password = %s AND role = %s"
                 cursor.execute(query, (username, password, role))
                 account = cursor.fetchone()
                 if account:
