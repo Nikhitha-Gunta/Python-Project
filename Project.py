@@ -2,13 +2,14 @@ import tkinter as tk
 import mysql.connector
 import re
 from tkinter import messagebox
+from tkcalendar import DateEntry
 
 
 class PetCareApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Pet Care Management System")
-        self.root.geometry("350x250")
+        self.root.geometry("400x400")
 
         self.setup_ui()
 
@@ -146,12 +147,12 @@ class PetCareApp:
         if conn is not None:
             cursor = conn.cursor()
             try:
-                # Select user from the database with the provided credentials
                 query = "SELECT * FROM user_information WHERE username = %s AND password = %s AND role = %s"
                 cursor.execute(query, (username, password, role))
                 account = cursor.fetchone()
                 if account:
-                    messagebox.showinfo("Login Successful", "Logged in as {}.".format(role))
+                    self.show_appointment_form()  # Show appointment form upon successful login
+                    return
                 else:
                     messagebox.showerror("Login Failed", "Invalid login details.")
             except mysql.connector.Error as e:
@@ -159,6 +160,78 @@ class PetCareApp:
             finally:
                 cursor.close()
                 conn.close()
+
+    def show_appointment_form(self):
+        self.clear_ui()
+
+        appointment_frame = tk.LabelFrame(self.root, text="Appointment Details")
+        appointment_frame.pack(padx=20, pady=10, fill="both", expand=True)
+
+        tk.Label(appointment_frame, text="Username:").grid(row=4, column=0, padx=5, pady=5)
+        self.username_entry = tk.Entry(appointment_frame)
+        self.username_entry.grid(row=4, column=1, padx=5, pady=5)
+
+        tk.Label(appointment_frame, text="Date (MM/DD/YYYY):").grid(row=1, column=0, padx=5, pady=5)
+        self.appointment_date_entry = DateEntry(appointment_frame, date_pattern='MM/dd/yyyy')
+        self.appointment_date_entry.grid(row=1, column=1, padx=5, pady=5)
+
+        tk.Label(appointment_frame, text="Time:").grid(row=2, column=0, padx=5, pady=5)
+        self.appointment_time_var = tk.StringVar(value="12:00 PM")
+        time_choices = [f"{h:02d}:{m:02d} {'AM' if h < 12 else 'PM'}" for h in range(1, 13) for m in range(0, 60, 30)]
+        self.appointment_time_entry = tk.OptionMenu(appointment_frame, self.appointment_time_var, *time_choices)
+        self.appointment_time_entry.grid(row=2, column=1, padx=5, pady=5)
+
+        tk.Label(appointment_frame, text="Service Type:").grid(row=3, column=0, padx=5, pady=5)
+        self.appointment_type_var = tk.StringVar(self.root)
+        appointment_type_optionmenu = tk.OptionMenu(appointment_frame, self.appointment_type_var, "Regular Checkup",
+                                                    "Vaccination", "Grooming")
+        appointment_type_optionmenu.grid(row=3, column=1, padx=5, pady=5)
+        self.appointment_type_var.set("Regular Checkup")  # Default value
+
+        # Frame to hold the action buttons
+        action_button_frame = tk.Frame(self.root,bg="#728780")
+        action_button_frame.pack(pady=20)
+
+        # Submit Button, packed inside the action_button_frame
+        submit_button = tk.Button(action_button_frame, text="Book Appointment", command=self.book_appointment, bg="#728780", fg="#FFFFFF")
+        submit_button.pack(side=tk.LEFT, padx=5)
+
+        # Logout Button, packed inside the action_button_frame
+        logout_button = tk.Button(action_button_frame, text="Logout", command=self.logout,bg="#728780", fg="#FFFFFF")
+        logout_button.pack(side=tk.RIGHT, padx=5)
+
+    def logout(self):
+        self.clear_ui()
+        self.setup_ui()
+
+    def book_appointment(self):
+        user_name = self.username_entry.get()
+        service_type = self.appointment_type_var.get()
+        appointment_date = self.appointment_date_entry.get()
+        appointment_time = self.appointment_time_entry.get()
+
+        # Validate user input
+        if not all([service_type, appointment_date, appointment_time, user_name]):
+            messagebox.showerror("Error", "Please fill out all fields.")
+            return
+
+        conn = self.connect_db()
+        if conn is not None:
+            cursor = conn.cursor()
+            try:
+                # Insert the appointment into the database
+                cursor.execute(
+                    "INSERT INTO Appointments (`Service_type`, `Appointment_Date`, `User_Name`, `Appointment_Time`) VALUES (%s, %s, %s, %s)",
+                    (service_type, appointment_date, user_name, appointment_time))
+                conn.commit()
+                messagebox.showinfo("Success", "Appointment booked successfully!")
+            except mysql.connector.Error as e:
+                messagebox.showerror("Database Error", str(e))
+            finally:
+                cursor.close()
+                conn.close()
+        else:
+            messagebox.showerror("Database Connection Error", "Could not connect to the database.")
 
     def back_to_home(self):
         self.clear_ui()
