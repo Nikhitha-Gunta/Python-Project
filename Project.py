@@ -1,7 +1,8 @@
 import tkinter as tk
+from tkinter import ttk, messagebox, Frame, Label
 import mysql.connector
+import datetime as dt
 import re
-from tkinter import messagebox
 from tkcalendar import DateEntry
 
 
@@ -9,7 +10,7 @@ class PetCareApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Pet Care Management System")
-        self.root.geometry("400x400")
+        self.root.geometry("800x600")
 
         self.setup_ui()
 
@@ -147,19 +148,154 @@ class PetCareApp:
         if conn is not None:
             cursor = conn.cursor()
             try:
-                query = "SELECT * FROM user_information WHERE username = %s AND password = %s AND role = %s"
-                cursor.execute(query, (username, password, role))
+                cursor.execute("SELECT role FROM user_information WHERE username = %s AND password = %s",
+                               (username, password))
                 account = cursor.fetchone()
                 if account:
-                    self.show_appointment_form()  # Show appointment form upon successful login
-                    return
+                    role = account[0]
+                    if role == "admin":
+                        self.show_admin_dashboard()
+                    elif role == "user":
+                        self.show_appointment_form()
                 else:
-                    messagebox.showerror("Login Failed", "Invalid login details.")
+                    messagebox.showerror("Login Failed", "Invalid username or password.")
             except mysql.connector.Error as e:
                 messagebox.showerror("Database Error", str(e))
             finally:
                 cursor.close()
                 conn.close()
+        else:
+            messagebox.showerror("Connection Failed", "Failed to connect to the database.")
+
+    def show_admin_dashboard(self):
+        self.clear_ui()
+        tk.Label(self.root, text="Admin Dashboard", bg="#728780", font=("Arial", 24, "bold"), fg="white").pack(pady=20)
+
+        tk.Button(self.root, text="Daily/Weekly/Monthly Appointments", command=self.appointments_report,
+                  bg="#728780", fg="white").pack(pady=10)
+        tk.Button(self.root, text="Appointment Types Distribution", command=self.appointment_types_report,
+                  bg="#728780", fg="white").pack(pady=10)
+        tk.Button(self.root, text="New Sign-ups Report", command=self.new_signups_report, bg="#728780",
+                  fg="white").pack(pady=10)
+
+        tk.Button(self.root, text="Logout", command=self.logout, bg="#728780", fg="white").pack(pady=20)
+
+    def generate_reports(self):
+        self.clear_ui()
+        self.show_report_buttons()
+
+    def show_report_buttons(self):
+        self.clear_ui()
+
+        tk.Label(self.root, text="Select a Report", bg="#728780", font=("Arial", 20, "bold"), fg="white").pack(pady=20)
+
+        # Button for Daily/Weekly/Monthly Appointments Report
+        tk.Button(self.root, text="Appointments Report", command=self.appointments_report,
+                  bg="#728780", fg="#FFFFFF").pack(pady=10)
+
+        # Button for Appointment Types Distribution Report
+        tk.Button(self.root, text="Appointment Types Report", command=self.appointment_types_report,
+                  bg="#728780", fg="#FFFFFF").pack(pady=10)
+
+        # Button for New Sign-ups Report
+        tk.Button(self.root, text="New Sign-ups Report", command=self.new_signups_report,
+                  bg="#728780", fg="#FFFFFF").pack(pady=10)
+
+        tk.Button(self.root, text="Back to Admin Dashboard", command=self.show_admin_dashboard, bg="#728780", fg="white").pack(pady=20)
+
+    def appointments_report(self):
+        conn = self.connect_db()
+        if conn:
+            cursor = conn.cursor(dictionary=True)
+            try:
+                query = """
+                SELECT DATE(Appointment_Date) AS Date, COUNT(*) AS Total_Appointments
+                FROM Appointments
+                GROUP BY DATE(Appointment_Date)
+                ORDER BY Date DESC
+                """
+                cursor.execute(query)
+                rows = cursor.fetchall()
+                if not rows:
+                    messagebox.showinfo("Info", "No appointments data to display.")
+                    return
+                report_title = "Daily Appointments Report"
+                self.display_report(rows, report_title)
+            except mysql.connector.Error as e:
+                messagebox.showerror("Database Error", str(e))
+            finally:
+                cursor.close()
+                conn.close()
+
+    def appointment_types_report(self):
+        conn = self.connect_db()
+        if conn:
+            cursor = conn.cursor(dictionary=True)  # dictionary=True to return rows as dictionaries
+            try:
+                query = "SELECT Service_Type, COUNT(*) AS Total FROM Appointments GROUP BY Service_Type"
+                cursor.execute(query)
+                rows = cursor.fetchall()
+                if not rows:
+                    messagebox.showinfo("Info", "No data to display.")
+                else:
+                    report_title = "Appointment Types Distribution"
+                    self.display_report(rows, report_title)
+            except mysql.connector.Error as e:
+                messagebox.showerror("Database Error", str(e))
+            finally:
+                cursor.close()
+                conn.close()
+
+    def new_signups_report(self):
+        conn = self.connect_db()
+        if conn:
+            cursor = conn.cursor(dictionary=True)
+            try:
+                query = """
+                SELECT DATE(registration_date) AS Date, COUNT(*) AS New_Signups
+                FROM user_information
+                GROUP BY DATE(registration_date)
+                ORDER BY Date DESC
+                """
+                cursor.execute(query)
+                rows = cursor.fetchall()
+                if not rows:
+                    messagebox.showinfo("Info", "No new sign-ups data to display.")
+                    return
+                report_title = "New Sign-ups Report"
+                self.display_report(rows, report_title)
+            except mysql.connector.Error as e:
+                messagebox.showerror("Database Error", str(e))
+            finally:
+                cursor.close()
+                conn.close()
+
+    def display_report(self, rows, report_title):
+        self.clear_ui()
+        tk.Label(self.root, text=report_title, font=('Arial', 16, 'bold')).pack()
+
+        if not rows:
+            messagebox.showinfo("Info", "No data to display.")
+            tk.Button(self.root, text="Back to Reports", command=self.show_report_buttons, bg="#728780",
+                      fg="#FFFFFF").pack(pady=10)
+        else:
+            frame = tk.Frame(self.root)
+            frame.pack(expand=True, fill='both')
+
+            columns = list(rows[0].keys()) if rows else ["Column"]
+            tree = ttk.Treeview(frame, columns=columns, show='headings')
+            tree.pack(expand=True, fill='both')
+
+            for col in columns:
+                tree.heading(col, text=col.replace("_", " ").title())
+                tree.column(col, anchor='center')
+
+            # Insert the rows into the treeview
+            for row in rows:
+                tree.insert('', 'end', values=[row[col] for col in columns])
+
+            tk.Button(self.root, text="Back to Reports", command=self.show_report_buttons, bg="#728780",
+                      fg="#FFFFFF").pack(pady=10)
 
     def show_appointment_form(self):
         self.clear_ui()
@@ -208,9 +344,8 @@ class PetCareApp:
         user_name = self.username_entry.get()
         service_type = self.appointment_type_var.get()
         appointment_date = self.appointment_date_entry.get()
-        appointment_time = self.appointment_time_entry.get()
+        appointment_time = self.appointment_time_var.get()
 
-        # Validate user input
         if not all([service_type, appointment_date, appointment_time, user_name]):
             messagebox.showerror("Error", "Please fill out all fields.")
             return
